@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum Gender {
+    Male
+    Female
+}
+
+model User {
+    id       String  @id @default(cuid())
+    username String  @unique
+    fullname String
+    img_url  String?
+    password String
+    phone_no BigInt
+    mail_id  String
+    gender   Gender
+
+    userAddress   UserAddress[]
+    ordersHistory UserOrdersHistory[]
+    ordersActive  UserActiveOrder[]
+}
+
+model Admin {
+    id       String @id @default(cuid())
+    username String @unique
+    password String
+    phone_no BigInt
+}
+
+enum Category {
+    Canteen
+    Den
+    Ration
+    Essential
+    Resturant
+}
+
+model Shop {
+    id           String   @id @default(cuid())
+    username     String   @unique
+    password     String
+    shop_name    String
+    address      String
+    rating       Float    @default(0.0)
+    rating_count BigInt   @default(0)
+    phone_no     BigInt
+    img_url      String
+    category     Category
+    active       Boolean  @default(true)
+
+    total_seat     Int?
+    available_seat Int?
+
+    total_revenue   BigInt @default(0)
+    commission      BigInt @default(0)
+    avg_order_value BigInt @default(0)
+
+    inventory     Inventory[]
+    ordersHistory VendorOrderHistory[]
+    ordersActive  VendorActiveOrder[]
+}
+
+model Delivery {
+    id       String @id @default(cuid())
+    username String @unique
+    password String
+    phone_no BigInt
+    img_url  String
+}
+
+model Inventory {
+    id           String @id @default(cuid())
+    name         String
+    price        Float
+    rating       Float  @default(0.0)
+    rating_count BigInt @default(0)
+    img_url      String
+    count        Int
+
+    shopId String
+    shop   Shop   @relation(fields: [shopId], references: [id])
+}
+
+model UserAddress {
+    id          String @id @default(cuid())
+    line1       String
+    line2       String
+    landmark    String
+    city        String
+    postal_code Int
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id])
+}
+
+model UserOrdersHistory {
+    id       String   @id @default(cuid())
+    name     String
+    price    Float
+    img_url  String
+    count    Int
+    category Category
+
+    User   User   @relation(fields: [userId], references: [id])
+    userId String
+}
+
+model UserActiveOrder {
+    id       String   @id @default(cuid())
+    name     String
+    price    Float
+    img_url  String
+    count    Int
+    category Category
+    User     User?    @relation(fields: [userId], references: [id])
+    userId   String?
+}
+
+model VendorOrderHistory {
+    id      String  @id @default(cuid())
+    name    String
+    price   Float
+    img_url String
+    count   Int
+    Shop    Shop?   @relation(fields: [shopId], references: [id])
+    shopId  String?
+}
+
+model VendorActiveOrder {
+    id      String  @id @default(cuid())
+    name    String
+    price   Float
+    img_url String
+    count   Int
+    Shop    Shop?   @relation(fields: [shopId], references: [id])
+    shopId  String?
+}

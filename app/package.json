@@ -1,0 +1,29 @@
+{
+  "name": "app",
+  "module": "index.ts",
+  "type": "module",
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "dotenv": "^17.2.3",
+    "prisma": "^7.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/client": "latest",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "zod": "^4.1.13"
+  }
+}

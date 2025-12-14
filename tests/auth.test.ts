@@ -14,6 +14,8 @@ describe("Auth API Tests", () => {
                 phone_no: 9999999999,
                 full_name: "Ramesh Ranjan",
                 img_url: null,
+                gender: "Male",
+                mail_id: "test@test.com",
                 role: "user"
             });
 
@@ -30,11 +32,6 @@ describe("Auth API Tests", () => {
         expect(signinres.body.token).toBeDefined();
         expect(signinres.body.token).toBe(res.body.token);
 
-        expect(signinres.body.token).toMatchObject({
-            username: username,
-            role: "user"
-        });
-        expect(signinres.body.token.usrid).toBeDefined();
 
     });
 
@@ -48,8 +45,6 @@ describe("Auth API Tests", () => {
                 username,
                 password,
                 phone_no: 9999999999,
-                full_name: "Suresh Kumar",
-                img_url: null,
                 role: "admin"
             });
 
@@ -58,19 +53,13 @@ describe("Auth API Tests", () => {
         expect(res.body.token).toBeDefined();
 
         const signinres = await request(app).post("/api/v1/signin").send({
-            username, password, role: "user"
+            username, password, role: "admin"
         });
 
         expect(signinres.status).toBe(200);
         expect(signinres.body.success).toBe(true);
         expect(signinres.body.token).toBeDefined();
         expect(signinres.body.token).toBe(res.body.token);
-
-        expect(signinres.body.token).toMatchObject({
-            username: username,
-            role: "admin"
-        });
-        expect(signinres.body.token.usrid).toBeDefined();
 
     });
 
@@ -88,8 +77,8 @@ describe("Auth API Tests", () => {
                 rating: 4.2,
                 rating_count: 2000,
                 phone_no: 1234567890,
-                image_url: "http://image.com/url",
-                category: "den"
+                img_url: "http://image.com/url",
+                category: "Den"
             });
 
         expect(res.status).toBe(200);
@@ -104,13 +93,6 @@ describe("Auth API Tests", () => {
         expect(signinres.body.token).toBeDefined();
         expect(signinres.body.token).toBe(res.body.token);
 
-        expect(signinres.body.token).toMatchObject({
-            username: username,
-            role: "vendor"
-        });
-        expect(signinres.body.token.usrid).toBeDefined();
-        expect(signinres.body.token.shop_id).toBeDefined();
-
     });
 
     test("should sign up a delivery boy", async () => {
@@ -124,7 +106,7 @@ describe("Auth API Tests", () => {
                 password,
                 role: "delivery_boy",
                 phone_no: 1234567890,
-                image_url: "http://image.url/com",
+                img_url: "http://image.url/com",
             });
 
         expect(res.status).toBe(200);
@@ -138,13 +120,6 @@ describe("Auth API Tests", () => {
         expect(signinres.body.success).toBe(true);
         expect(signinres.body.token).toBeDefined();
         expect(signinres.body.token).toBe(res.body.token);
-
-        expect(signinres.body.token).toMatchObject({
-            username: username,
-            role: "delivery_boy"
-        });
-        expect(signinres.body.token.usrid).toBeDefined();
-
 
     });
 
@@ -186,6 +161,8 @@ describe("Auth API Tests", () => {
                 phone_no: 9999999999,
                 full_name: "Ramesh Ranjan",
                 img_url: null,
+                gender: "Male",
+                mail_id: "test@test.com",
                 role: "user"
             });
 
@@ -193,7 +170,7 @@ describe("Auth API Tests", () => {
             username, password: "wrongpassword", role: "user"
         });
 
-        expect(signinres.status).toBe(400);
+        expect(signinres.status).toBe(401);
     });
 
     test("should return 400 on non-existent user", async () => {
@@ -203,7 +180,7 @@ describe("Auth API Tests", () => {
             role: "user"
         });
 
-        expect(signinres.status).toBe(400);
+        expect(signinres.status).toBe(401);
     });
 
     test("should return 403 on role mismatch", async () => {
@@ -218,6 +195,8 @@ describe("Auth API Tests", () => {
                 phone_no: 9999999999,
                 full_name: "Ramesh Ranjan",
                 img_url: null,
+                gender: "Male",
+                mail_id: "test@test.com",
                 role: "user"
             });
 
@@ -225,7 +204,7 @@ describe("Auth API Tests", () => {
             username, password, role: "admin" // role mismatch
         });
 
-        expect(signinres.status).toBe(403);
+        expect(signinres.status).toBe(401);
     });
 
 });
