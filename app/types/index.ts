@@ -57,3 +57,17 @@ export type adminSignUpPayload = z.infer<typeof adminSchema>;
 export type vendorSignUpPayload = z.infer<typeof vendorSchema>;
 export type deliveryBoySignUpPayload = z.infer<typeof deliveryBoySchema>;
 export type SignUpPayload = z.infer<typeof SignUpSchema>;
+
+export const AddInventorySchema = z.object({
+    name: z.string(),
+    price: z.number().positive(),
+    img_url: z.url("Must be valid URL"),
+    rating: z.number().min(0).max(5).optional(),
+    rating_count: z.number().int().nonnegative().optional(),
+    count: z.number().int().nonnegative(),
+});
+
+export const UpdateSeatSchema = z.object({
+    available_seat: z.number().int().nonnegative()
+});
+

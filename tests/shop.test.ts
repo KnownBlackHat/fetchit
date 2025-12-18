@@ -72,35 +72,41 @@ describe("Shop & Restaurant API Tests", () => {
 
 
     beforeAll(async () => {
-        vendorToken1 = await createVendor();
-        vendorToken2 = await createVendor();
-        vendorToken3 = await createVendor();
-        restaurantVendorToken = await createResturantVendor();
-        userToken1 = await createUser();
+        vendorToken1 = `Bearer ${await createVendor()}`;
+        vendorToken2 = `Bearer ${await createVendor()}`;
+        vendorToken3 = `Bearer ${await createVendor()}`;
+        restaurantVendorToken = `Bearer ${await createResturantVendor()}`;
+        userToken1 = `Bearer ${await createUser()}`;
+    });
+
+    afterAll(async () => {
+        await request(app).delete("/api/v1/shop").set("authorization", vendorToken1);
+        await request(app).delete("/api/v1/shop").set("authorization", vendorToken2);
+        await request(app).delete("/api/v1/shop").set("authorization", vendorToken3);
+        await request(app).delete("/api/v1/shop").set("authorization", restaurantVendorToken);
     });
 
 
     test("client should get shops list", async () => {
-        const res = await request(app).get("/api/v1/shops");
+        const res = await request(app).get("/api/v1/shop").set("authorization", userToken1);
 
         expect(res.status).toBe(200);
-        expect(res.body.shops).toBe(true);
-        expect(res.body.shops.length).toBe(3);
+        expect(res.body.shops).toBeDefined();
+        expect(res.body.shops.length).toBe(4);
     });
 
     test("vendor can add items in shop", async () => {
         const res = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send({
             "name": "product name" + Math.random(),
-            "description": "great product",
             "price": Math.floor(Math.random() * 1000),
-            "image_url": "https://image.com/url",
+            "img_url": "https://image.com/url",
             "count": 1000
         });
         const res2 = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send({
             "name": "product name" + Math.random(),
             "description": "greatest product",
             "price": Math.floor(Math.random() * 1000),
-            "image_url": "https://image.com/url",
+            "img_url": "https://image.com/url",
             "count": 90
         });
 
@@ -127,16 +133,14 @@ describe("Shop & Restaurant API Tests", () => {
 
     test("vendor can't add items in shop with same product name", async () => {
         const res = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send({
-            "name": "product1",
-            "description": "great product",
-            "image_url": "https://image.com/url",
+            "name": "product2",
+            "img_url": "https://image.com/url",
             "price": 29.00,
             "count": 1000
         });
         const res2 = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send({
-            "name": "product1",
-            "description": "great product",
-            "image_url": "https://image.com/url",
+            "name": "product2",
+            "img_url": "https://image.com/url",
             "price": 290.00,
             "count": 380
         });
@@ -145,22 +149,23 @@ describe("Shop & Restaurant API Tests", () => {
         expect(res.body.success).toBe(true);
         expect(res.body.id).toBeDefined();
         expect(res2.status).toBe(409);
-        expect(res.body.success).toBe(false);
+        expect(res2.body.success).toBe(false);
     });
 
     test("client should get shop items", async () => {
         // @ts-ignore
-        const shopId: string = jwt.decode(vendorToken1)?.shop_id
+        const shopId: string = jwt.decode(vendorToken1.split(' ')[1])?.shop_id
 
-        const res = await request(app).get(`/api/v1/shops/${shopId}/inventory`);
+        const res = await request(app).get(`/api/v1/shop/inventory/${shopId}`).set("authorization", userToken1);
 
+        expect(res.status).toBe(200);
+        expect(res.body.items).toBeDefined();
         expect(res.body.items.length).toBe(3);
         expect(res.body.items[0]).toMatchObject({
             id: expect.any(String),
             name: expect.any(String),
-            description: expect.any(String),
             price: expect.any(Number),
-            image_url: expect.any(String),
+            img_url: expect.any(String),
             rating: expect.any(Number),
             rate_count: expect.any(Number),
             count: expect.any(Number)
@@ -168,12 +173,12 @@ describe("Shop & Restaurant API Tests", () => {
     });
 
     test("client should get restaurant shops list", async () => {
-        const res = await request(app).get("/api/v1/restaurant");
+        const res = await request(app).get("/api/v1/shop/resturant").set("authorization", userToken1);
 
         expect(res.status).toBe(200);
-        expect(res.body.restaurant).toBe(true);
-        expect(res.body.restaurant.length).toBe(1);
-        expect(res.body.restaurant[0]).toMatchObject({
+        expect(res.body.restaurants).toBeDefined();
+        expect(res.body.restaurants.length).toBe(1);
+        expect(res.body.restaurants[0]).toMatchObject({
             id: expect.any(String),
             name: expect.any(String),
             address: expect.any(String),
@@ -188,21 +193,33 @@ describe("Shop & Restaurant API Tests", () => {
         });
     });
 
+    test("client shouldn't get restaurant shops list without token", async () => {
+        const res = await request(app).get("/api/v1/shop/resturant");
+
+        expect(res.status).toBe(403);
+    });
+
+    test("client shouldn't get restaurant shops list with wrong token", async () => {
+        const res = await request(app).get("/api/v1/shop/resturant").set("authorization", "Bearer asdadjsa.asdsads.asdsa");;
+
+        expect(res.status).toBe(401);
+    });
+
     test("restaurant vendor can update available seats", async () => {
-        const res = await request(app).patch(`/api/v1/restaurant/seats`).set("authorization", restaurantVendorToken).send({
+        const res = await request(app).patch(`/api/v1/shop/resturant/seat`).set("authorization", restaurantVendorToken).send({
             available_seat: 80
         });
 
         expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);
 
-        const res2 = await request(app).get("/api/v1/restaurant");
+        const res2 = await request(app).get("/api/v1/shop/resturant").set("authorization", userToken1);
         expect(res2.status).toBe(200);
-        expect(res2.body.restaurant[0].booking.available_seat).toBe(80);
+        expect(res2.body.restaurants[0].booking.available_seat).toBe(80);
     });
 
     test("client can get delivery partner", async () => {
-        const res = await request(app).get("/api/v1/delivery_partner");
+        const res = await request(app).get("/api/v1/delivery_partner").set("authorization", userToken1);
 
         expect(res.status).toBe(200);
         expect(res.body).toMatchObject({

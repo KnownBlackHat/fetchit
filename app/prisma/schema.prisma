@@ -83,7 +83,7 @@ model Delivery {
 
 model Inventory {
     id           String @id @default(cuid())
-    name         String
+    name         String @unique
     price        Float
     rating       Float  @default(0.0)
     rating_count BigInt @default(0)
@@ -91,7 +91,7 @@ model Inventory {
     count        Int
 
     shopId String
-    shop   Shop   @relation(fields: [shopId], references: [id])
+    shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
 }
 
 model UserAddress {
@@ -103,7 +103,7 @@ model UserAddress {
     postal_code Int
 
     userId String
-    user   User   @relation(fields: [userId], references: [id])
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserOrdersHistory {
@@ -114,7 +114,7 @@ model UserOrdersHistory {
     count    Int
     category Category
 
-    User   User   @relation(fields: [userId], references: [id])
+    User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId String
 }
 
@@ -125,7 +125,7 @@ model UserActiveOrder {
     img_url  String
     count    Int
     category Category
-    User     User?    @relation(fields: [userId], references: [id])
+    User     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId   String?
 }
 
@@ -135,7 +135,7 @@ model VendorOrderHistory {
     price   Float
     img_url String
     count   Int
-    Shop    Shop?   @relation(fields: [shopId], references: [id])
+    Shop    Shop?   @relation(fields: [shopId], references: [id], onDelete: Cascade)
     shopId  String?
 }
 
@@ -145,6 +145,6 @@ model VendorActiveOrder {
     price   Float
     img_url String
     count   Int
-    Shop    Shop?   @relation(fields: [shopId], references: [id])
+    Shop    Shop?   @relation(fields: [shopId], references: [id], onDelete: Cascade)
     shopId  String?
 }
