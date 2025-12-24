@@ -4,8 +4,6 @@ import { Router } from "express";
 import { Category, Prisma } from "../../generated/prisma/client";
 import { vendorMiddleWare } from "../../middlewares/vendor";
 import { userMiddleWare } from "../../middlewares/user";
-import { adminMiddleWare } from "../../middlewares/admin";
-import { deliveryMiddleWare } from "../../middlewares/deliveryBoy";
 
 export const shopRouter = Router();
 
@@ -372,3 +370,4 @@ shopRouter.delete("/", vendorMiddleWare, async (req, res) => {
         return;
     }
 });
+

@@ -22,11 +22,11 @@ export const deliveryMiddleWare = (req: Request, res: Response, next: NextFuncti
     }
 
     try {
-        const decodedPayload = jwt.verify(token, process.env.JWT_SECRET || "MY_SECRET") as { userid: string, role: string };
+        const decodedPayload = jwt.verify(token, process.env.JWT_SECRET || "MY_SECRET") as { usrid: string, role: string };
         if (decodedPayload.role !== "delivery_boy") {
             throw new Error();
         }
-        req.usrId = decodedPayload.userid;
+        req.usrId = decodedPayload.usrid;
         next();
     } catch {
         res.status(401).json({ success: false, error: "Unauthorized" })

@@ -71,3 +71,18 @@ export const UpdateSeatSchema = z.object({
     available_seat: z.number().int().nonnegative()
 });
 
+export const UpdateMetaData = z.object({
+    full_name: z.string().optional(),
+    profile_image: z.string().optional(),
+    phone_no: z.number().optional(),
+    mail: z.string().optional(),
+    gender: z.string().optional(),
+})
+
+export const AddAddress = z.object({
+    line_1: z.string(),
+    line_2: z.string(),
+    landmark: z.string(),
+    city: z.string(),
+    postal_code: z.number()
+})

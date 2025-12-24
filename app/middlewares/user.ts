@@ -22,16 +22,15 @@ export const userMiddleWare = (req: Request, res: Response, next: NextFunction) 
     }
 
     try {
-        const decodedPayload = jwt.verify(token, process.env.JWT_SECRET || "MY_SECRET") as { userid: string, role: string };
+        const decodedPayload = jwt.verify(token, process.env.JWT_SECRET || "MY_SECRET") as { usrid: string, role: string };
         if (decodedPayload.role !== "user") {
             throw new Error();
         }
-        req.usrId = decodedPayload.userid;
+        req.usrId = decodedPayload.usrid;
         next();
     } catch {
         res.status(401).json({ success: false, error: "Unauthorized" })
         return;
     }
-
 }
 

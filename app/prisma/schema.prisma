@@ -1,4 +1,4 @@
-// This is your Prisma schema file,
+// This is your Prisma schema file,sch
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
@@ -102,7 +102,7 @@ model UserAddress {
     city        String
     postal_code Int
 
-    userId String
+    userId String @unique
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -114,7 +114,7 @@ model UserOrdersHistory {
     count    Int
     category Category
 
-    User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId String
 }
 
@@ -125,7 +125,7 @@ model UserActiveOrder {
     img_url  String
     count    Int
     category Category
-    User     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId   String?
 }
 
@@ -135,7 +135,7 @@ model VendorOrderHistory {
     price   Float
     img_url String
     count   Int
-    Shop    Shop?   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+    shop    Shop?   @relation(fields: [shopId], references: [id], onDelete: Cascade)
     shopId  String?
 }
 
@@ -145,6 +145,11 @@ model VendorActiveOrder {
     price   Float
     img_url String
     count   Int
-    Shop    Shop?   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+    shop    Shop?   @relation(fields: [shopId], references: [id], onDelete: Cascade)
     shopId  String?
+}
+
+model OrderIntermidates {
+    id       String  @id @default(cuid())
+    accepted Boolean
 }

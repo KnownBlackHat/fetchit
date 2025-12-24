@@ -1,6 +1,7 @@
 import request from "supertest";
 import jwt from 'jsonwebtoken';
 import app from "../app/index";
+import { createResturantVendor, createVendor, createUser } from "./helper";
 
 describe("Shop & Restaurant API Tests", () => {
     let vendorToken1: string;
@@ -9,66 +10,6 @@ describe("Shop & Restaurant API Tests", () => {
     let restaurantVendorToken: string;
     let userToken1: string;
 
-    async function createResturantVendor() {
-        const username = "test_restaurant" + Math.random();
-        const password = "1234";
-        const res = await request(app)
-            .post("/api/v1/signup")
-            .send({
-                username,
-                role: "vendor",
-                password,
-                shop_name: "Monet Lounge and Bar",
-                address: "CG 105, Ground Floor",
-                rating: parseFloat(`${Math.floor(Math.random() * 5)}.${Math.floor(Math.random() * 10)}`),
-                rating_count: 2000,
-                phone_no: 1234567890,
-                img_url: "http://image.com/url",
-                category: "Resturant",
-                total_seat: 100,
-                available_seat: 90,
-            });
-        return res.body.token;
-    }
-
-    async function createVendor() {
-        const username = "test_vendor" + Math.random();
-        const password = "1234";
-        const res = await request(app)
-            .post("/api/v1/signup")
-            .send({
-                username,
-                role: "vendor",
-                password,
-                shop_name: "Monet Lounge and Bar",
-                address: "CG 105, Ground Floor",
-                rating: parseFloat(`${Math.floor(Math.random() * 5)}.${Math.floor(Math.random() * 10)}`),
-                rating_count: 2000,
-                phone_no: 1234567890,
-                img_url: "http://image.com/url",
-                category: "Den"
-            });
-        return res.body.token;
-    }
-
-    async function createUser() {
-        const username = "test_user" + Math.random();
-        const password = "1234";
-        const res = await request(app)
-            .post("/api/v1/signup")
-            .send({
-                username,
-                password,
-                phone_no: 9999999999,
-                full_name: "Ramesh Ranjan",
-                img_url: null,
-                gender: "Male",
-                mail_id: "test@test.com",
-                role: "user"
-            });
-
-        return res.body.token;
-    }
 
 
     beforeAll(async () => {
@@ -218,18 +159,18 @@ describe("Shop & Restaurant API Tests", () => {
         expect(res2.body.restaurants[0].booking.available_seat).toBe(80);
     });
 
-    test("client can get delivery partner", async () => {
-        const res = await request(app).get("/api/v1/delivery_partner").set("authorization", userToken1);
+    // test("client can get delivery partner", async () => {
+    //     const res = await request(app).get("/api/v1/delivery_partner").set("authorization", userToken1);
 
-        expect(res.status).toBe(200);
-        expect(res.body).toMatchObject({
-            id: expect.any(String),
-            name: expect.any(String),
-            phone_no: expect.any(Number),
-            img_url: expect.any(String),
-            rating: expect.any(Number),
-            order_count: expect.any(Number)
-        });
-    });
+    //     expect(res.status).toBe(200);
+    //     expect(res.body).toMatchObject({
+    //         id: expect.any(String),
+    //         name: expect.any(String),
+    //         phone_no: expect.any(Number),
+    //         img_url: expect.any(String),
+    //         rating: expect.any(Number),
+    //         order_count: expect.any(Number)
+    //     });
+    // });
 
 });

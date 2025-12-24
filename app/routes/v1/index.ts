@@ -3,7 +3,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import client from "../../lib/db";
 import { SignInSchema, SignUpSchema } from "../../types";
 import { shopRouter } from "./shop";
-import { restaurantRouter } from "./restaurant";
+import { userRouter } from "./user";
 
 export const router = Router();
 
@@ -193,4 +193,4 @@ router.post("/signin", async (req, res) => {
 })
 
 router.use("/shop", shopRouter);
-router.use("/restaurant", restaurantRouter);
+router.use("/user", userRouter);
