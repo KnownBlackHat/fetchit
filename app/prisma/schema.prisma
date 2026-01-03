@@ -28,9 +28,7 @@ model User {
     mail_id  String
     gender   Gender
 
-    userAddress   UserAddress[]
-    ordersHistory UserOrdersHistory[]
-    ordersActive  UserActiveOrder[]
+    userAddress UserAddress[]
 }
 
 model Admin {
@@ -68,30 +66,32 @@ model Shop {
     commission      BigInt @default(0)
     avg_order_value BigInt @default(0)
 
-    inventory     Inventory[]
-    ordersHistory VendorOrderHistory[]
-    ordersActive  VendorActiveOrder[]
+    inventory Inventory[]
+    Orders    Orders[]
 }
 
 model Delivery {
-    id       String @id @default(cuid())
-    username String @unique
+    id       String   @id @default(cuid())
+    username String   @unique
     password String
     phone_no BigInt
     img_url  String
+    Orders   Orders[]
 }
 
 model Inventory {
     id           String @id @default(cuid())
     name         String @unique
     price        Float
+    retail_price Float
     rating       Float  @default(0.0)
     rating_count BigInt @default(0)
     img_url      String
     count        Int
 
-    shopId String
-    shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+    shopId     String
+    shop       Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+    OrderItems OrderItems[]
 }
 
 model UserAddress {
@@ -102,54 +102,41 @@ model UserAddress {
     city        String
     postal_code Int
 
-    userId String @unique
-    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String   @unique
+    user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    Orders Orders[]
 }
 
-model UserOrdersHistory {
-    id       String   @id @default(cuid())
-    name     String
-    price    Float
-    img_url  String
-    count    Int
-    category Category
-
-    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId String
+enum OrderStatus {
+    PENDING
+    CONFIRMED
+    DELIVERED
 }
 
-model UserActiveOrder {
-    id       String   @id @default(cuid())
-    name     String
-    price    Float
-    img_url  String
-    count    Int
-    category Category
-    user     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId   String?
+model Orders {
+    id         String      @id @default(cuid())
+    totalprice Float
+    status     OrderStatus @default(PENDING)
+    createdAt  DateTime    @default(now())
+    updatedAt  DateTime    @updatedAt
+
+    items OrderItems[]
+
+    addressId  String
+    address    UserAddress @relation(fields: [addressId], references: [id])
+    deliveryId String?
+    delivery   Delivery?   @relation(fields: [deliveryId], references: [id])
+    shopId     String
+    shop       Shop        @relation(fields: [shopId], references: [id])
 }
 
-model VendorOrderHistory {
-    id      String  @id @default(cuid())
-    name    String
-    price   Float
-    img_url String
-    count   Int
-    shop    Shop?   @relation(fields: [shopId], references: [id], onDelete: Cascade)
-    shopId  String?
-}
+model OrderItems {
+    id          String @id @default(cuid())
+    quantity    Int
+    priceAtTime Float
 
-model VendorActiveOrder {
-    id      String  @id @default(cuid())
-    name    String
-    price   Float
-    img_url String
-    count   Int
-    shop    Shop?   @relation(fields: [shopId], references: [id], onDelete: Cascade)
-    shopId  String?
-}
-
-model OrderIntermidates {
-    id       String  @id @default(cuid())
-    accepted Boolean
+    Orders      Orders?   @relation(fields: [ordersId], references: [id])
+    ordersId    String?
+    inventoryId String
+    inventory   Inventory @relation(fields: [inventoryId], references: [id])
 }

@@ -37,60 +37,55 @@ describe("Shop & Restaurant API Tests", () => {
     });
 
     test("vendor can add items in shop", async () => {
-        const res = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send({
+        const res = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send([{
             "name": "product name" + Math.random(),
             "price": Math.floor(Math.random() * 1000),
             "img_url": "https://image.com/url",
-            "count": 1000
-        });
-        const res2 = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send({
+            "count": 1000,
+            "retail_price": Math.floor(Math.random() * 1000)
+        },
+        {
             "name": "product name" + Math.random(),
             "description": "greatest product",
             "price": Math.floor(Math.random() * 1000),
             "img_url": "https://image.com/url",
-            "count": 90
-        });
+            "count": 90,
+            "retail_price": Math.floor(Math.random() * 1000)
+        }]);
 
         expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);
-        expect(res.body.id).toBeDefined();
-
-        expect(res2.status).toBe(200);
-        expect(res2.body.success).toBe(true);
-        expect(res2.body.id).toBeDefined();
     });
 
     test("vendor can't add items in shop with missing fields", async () => {
-        const res = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send({
+        const res = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send([{
             "name": "product name" + Math.random(),
             "description": "great product",
             "image_url": "https://image.com/url",
-            "count": 1000
-        });
+            "count": 1000,
+            "retail_price": Math.floor(Math.random() * 1000)
+        }]);
 
         expect(res.status).toBe(400);
         expect(res.body.success).toBe(false);
     });
 
     test("vendor can't add items in shop with same product name", async () => {
-        const res = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send({
+        const res = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send([{
             "name": "product2",
             "img_url": "https://image.com/url",
             "price": 29.00,
-            "count": 1000
-        });
-        const res2 = await request(app).post(`/api/v1/shop/inventory`).set("authorization", vendorToken1).send({
+            "count": 1000,
+            "retail_price": 20.00
+        }, {
             "name": "product2",
             "img_url": "https://image.com/url",
             "price": 290.00,
-            "count": 380
-        });
+            "count": 380,
+            "retail_price": 200.00
+        }]);
 
-        expect(res.status).toBe(200);
-        expect(res.body.success).toBe(true);
-        expect(res.body.id).toBeDefined();
-        expect(res2.status).toBe(409);
-        expect(res2.body.success).toBe(false);
+        expect(res.status).toBe(409);
     });
 
     test("client should get shop items", async () => {
@@ -101,7 +96,7 @@ describe("Shop & Restaurant API Tests", () => {
 
         expect(res.status).toBe(200);
         expect(res.body.items).toBeDefined();
-        expect(res.body.items.length).toBe(3);
+        expect(res.body.items.length).toBe(2);
         expect(res.body.items[0]).toMatchObject({
             id: expect.any(String),
             name: expect.any(String),
@@ -109,6 +104,7 @@ describe("Shop & Restaurant API Tests", () => {
             img_url: expect.any(String),
             rating: expect.any(Number),
             rate_count: expect.any(Number),
+            retail_price: expect.any(Number),
             count: expect.any(Number)
         });
     });

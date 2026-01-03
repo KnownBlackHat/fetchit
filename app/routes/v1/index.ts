@@ -4,6 +4,7 @@ import client from "../../lib/db";
 import { SignInSchema, SignUpSchema } from "../../types";
 import { shopRouter } from "./shop";
 import { userRouter } from "./user";
+import { orderRouter } from "./order";
 
 export const router = Router();
 
@@ -99,10 +100,10 @@ router.post("/signup", async (req, res) => {
             success: true,
             token
         })
-    } catch (e) {
+    } catch {
         res.status(400).json({
             success: false,
-            error: "User already exsists -> " + e
+            error: "User already exsists"
         })
     }
 })
@@ -184,13 +185,14 @@ router.post("/signin", async (req, res) => {
             success: true,
             token
         });
-    } catch (e) {
+    } catch {
         res.status(500).json({
             success: false,
-            error: "Internal Server Error" + e
+            error: "Internal Server Error"
         })
     }
 })
 
 router.use("/shop", shopRouter);
 router.use("/user", userRouter);
+router.use("/order", orderRouter);

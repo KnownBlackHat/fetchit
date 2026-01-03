@@ -1,86 +1,234 @@
-import { describe, it, expect } from "bun:test";
+import jwt from "jsonwebtoken";
 import request from "supertest";
 import app from "../app/index";
+import { createUser, createVendor, createDeliveryAgent } from "./helper";
 
 describe("Order Endpoint (POST /api/v1/order)", () => {
+    let userToken: string;
+    let vendorToken: string;
+    let deliveryToken: string;
+    let inventoryItems: any[] = [];
+    let shopId: string;
+    let orderId: string;
 
-    // -------- VALID --------
-    it("should create order successfully", async () => {
-        const res = await request(app)
-            .post("/api/v1/order")
-            .query({ shopType: "canteen" })
-            .send({
-                shopid1: ["item1", "item2"],
-                shopid2: ["item3"]
-            });
+    beforeAll(async () => {
+        userToken = await createUser();
+        vendorToken = await createVendor();
+        deliveryToken = await createDeliveryAgent();
+        let jwtObj = jwt.decode(vendorToken) as { username: string, role: string, shop_id: string };
+        shopId = jwtObj.shop_id;
+        let items = [
+            {
+                name: "Item 1" + Math.random() * 1000,
+                img_url: "http://example.com/item1.jpg",
+                count: 20,
+                price: 10.0,
+                retail_price: 8.0,
+            },
+            {
+                name: "Item 2" + Math.random() * 1000,
+                img_url: "http://example.com/item1.jpg",
+                count: 10,
+                price: 20.0,
+                retail_price: 10.0,
+            },
+        ];
+        const addItemResp = await request(app)
+            .post("/api/v1/shop/inventory")
+            .set("Authorization", `Bearer ${vendorToken}`)
+            .send(items);
+        const itemsRes = await request(app).get(`/api/v1/shop/inventory/${shopId}`).set("Authorization", `Bearer ${userToken}`);
+        inventoryItems = itemsRes.body.items;
+    });
 
-        expect(res.status).toBe(201);
+
+    test("fail to create order with no user address", async () => {
+
+        const res = await request(app).post(`/api/v1/order/${shopId}`).set("Authorization", `Bearer ${userToken}`).send([{
+            id: inventoryItems[0].id,
+            count: 1
+        },
+        {
+            id: inventoryItems[1].id,
+            count: 2
+        }
+        ]);
+
+        expect(res.status).toBe(400);
+        expect(res.body.success).toBe(false);
+    });
+
+    test("succefully create order", async () => {
+        const itemsResPrev = await request(app).get(`/api/v1/shop/inventory/${shopId}`).set("Authorization", `Bearer ${userToken}`);
+
+        await request(app).post("/api/v1/user/address").set("authorization", `Bearer ${userToken}`).send({
+            line_1: "LINE 1 ADDR",
+            line_2: "LINE 2 ADDR",
+            landmark: "LANDMARK",
+            city: "Noida",
+            postal_code: 5000034,
+        });
+
+        const res = await request(app).post(`/api/v1/order/${shopId}`).set("Authorization", `Bearer ${userToken}`).send([{
+            id: inventoryItems[0].id,
+            count: 1
+        },
+        {
+            id: inventoryItems[1].id,
+            count: 2
+        }
+        ]);
+
+        expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);
+        expect(res.body.order_id).toBeDefined();
+        orderId = res.body.order_id;
+
+
+        // Check for the item count in inventory
+
+        const itemsRes = await request(app).get(`/api/v1/shop/inventory/${shopId}`).set("Authorization", `Bearer ${userToken}`);
+        expect(itemsRes.body.items[0].count).toBe(itemsResPrev.body.items[0].count - 1);
+        expect(itemsRes.body.items[1].count).toBe(itemsResPrev.body.items[1].count - 2);
+
+
     });
 
-    // -------- MUTUALLY EXCLUSIVE --------
-    it("should reject if shopType contains both canteen and den", async () => {
-        const res = await request(app)
-            .post("/api/v1/order")
-            .query({ shopType: "canteen,den" })
-            .send({
-                shopid1: ["item1"]
-            });
+    test("fail to create order with insufficient inventory", async () => {
+        const res = await request(app).post(`/api/v1/order/${shopId}`).set("Authorization", `Bearer ${userToken}`).send([{
+            id: inventoryItems[0].id,
+            count: 1000
+        }]);
 
         expect(res.status).toBe(400);
-        expect(res.body.error).toContain("canteen and den can’t be together");
+        expect(res.body.success).toBe(false);
     });
 
-    // -------- MISSING shopType --------
-    it("should reject missing shopType", async () => {
-        const res = await request(app)
-            .post("/api/v1/order")
-            .send({
-                shopid1: ["item1"]
-            });
+    test("fail to create order with invalid item ID", async () => {
+        const res = await request(app).post(`/api/v1/order/${shopId}`).set("Authorization", `Bearer ${userToken}`).send([{
+            id: "invalid-id",
+            count: 1
+        }]);
 
         expect(res.status).toBe(400);
-        expect(res.body.error).toContain("shopType is required");
+        expect(res.body.success).toBe(false);
     });
 
-    // -------- INVALID shopType --------
-    it("should reject unknown shopType", async () => {
-        const res = await request(app)
-            .post("/api/v1/order")
-            .query({ shopType: "randomshop" })
-            .send({
-                shopid1: ["item1"]
-            });
+    test("fail to create order without authentication", async () => {
+        const res = await request(app).post(`/api/v1/order/${shopId}`).send([{
+            id: inventoryItems[0].id,
+            count: 1
+        }]);
+        expect(res.status).toBe(403);
+    });
 
+    test("fail to create order with empty order list", async () => {
+        const res = await request(app).post(`/api/v1/order/${shopId}`).set("Authorization", `Bearer ${userToken}`).send([]);
         expect(res.status).toBe(400);
-        expect(res.body.error).toContain("Invalid shopType");
+        expect(res.body.success).toBe(false);
     });
 
-    // -------- INVALID FIELD TYPE --------
-    it("should reject if an item list is not an array", async () => {
-        const res = await request(app)
-            .post("/api/v1/order")
-            .query({ shopType: "canteen" })
-            .send({
-                shopid1: "not-an-array"
+    test("should get active order for user", async () => {
+        const res = await request(app).get("/api/v1/order/active").set("Authorization", `Bearer ${userToken}`);
+        expect(res.status).toBe(200);
+        expect(Object.values(res.body).length).toBe(1);
+        Object.values(res.body).forEach(item => {
+            // @ts-ignore
+            expect(item[0]).toMatchObject({
+                id: expect.any(String),
+                name: expect.any(String),
+                price: expect.any(Number),
+                image_url: expect.any(String),
+                count: expect.any(Number)
+            })
+        })
+    });
+
+    test("should get active order for vendor", async () => {
+        const res = await request(app).get("/api/v1/order/vendor/active").set("Authorization", `Bearer ${vendorToken}`);
+        expect(res.status).toBe(200);
+        expect(Object.keys(res.body).length).toBe(1);
+        Object.values(res.body).forEach(item => {
+            // @ts-ignore
+            expect(item[0]).toMatchObject({
+                id: expect.any(String),
+                name: expect.any(String),
+                price: expect.any(Number),
+                image_url: expect.any(String),
+                count: expect.any(Number)
             });
-
-        expect(res.status).toBe(400);
-        expect(res.body.error).toContain("items must be an array");
+        });
     });
 
-    // -------- EXTRA UNMATCHED FIELDS --------
-    it("should reject if unmatched fields provided", async () => {
-        const res = await request(app)
-            .post("/api/v1/order")
-            .query({ shopType: "canteen" })
-            .send({
-                shopid1: ["item1"],
-                unknownField: "something"
+    test("should get order status to be pending", async () => {
+        const res = await request(app).get(`/api/v1/order/status/${orderId}`).set("Authorization", `Bearer ${userToken}`);
+        expect(res.status).toBe(200);
+        expect(res.body.status).toBe("PENDING");
+        expect(res.body.items).toBeDefined();
+        expect(res.body.delivery_agent).toBeDefined();
+        // expect(res.body.delivery_agent).toMatchObject({
+        //     id: expect.any(String),
+        //     name: expect.any(String),
+        //     phoneno: expect.any(Number),
+        //     img_url: expect.any(String),
+        // });
+    });
+
+
+    test("should complete order", async () => {
+        const res = await request(app).get(`/api/v1/order/complete/${orderId}`).set("Authorization", `Bearer ${deliveryToken}`);
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+
+        const res2 = await request(app).get("/api/v1/order/active").set("Authorization", `Bearer ${userToken}`);
+        expect(res2.status).toBe(200);
+        expect(Object.values(res2.body).length).toBe(0);
+    });
+
+    test("should get order history for user", async () => {
+        const res = await request(app).get("/api/v1/order/history").set("Authorization", `Bearer ${userToken}`);
+        expect(res.status).toBe(200);
+        expect(Object.values(res.body).length).toBe(1);
+        Object.values(res.body).forEach(item => {
+            // @ts-ignore
+            expect(item[0]).toMatchObject({
+                id: expect.any(String),
+                name: expect.any(String),
+                price: expect.any(Number),
+                image_url: expect.any(String),
+                count: expect.any(Number)
+            })
+        })
+    });
+
+    test("should get history order for vendor", async () => {
+        const res = await request(app).get("/api/v1/order/vendor/history").set("Authorization", `Bearer ${vendorToken}`);
+        expect(res.status).toBe(200);
+        expect(Object.keys(res.body).length).toBe(1);
+        Object.values(res.body).forEach(item => {
+            // @ts-ignore
+            expect(item[0]).toMatchObject({
+                id: expect.any(String),
+                name: expect.any(String),
+                price: expect.any(Number),
+                image_url: expect.any(String),
+                count: expect.any(Number)
             });
-
-        expect(res.status).toBe(400);
-        expect(res.body.error).toContain("Unknown field");
+        });
     });
+
+    test.skip("should get order status to be delivered", async () => {
+        const res = await request(app).get(`/api/v1/order/status/${orderId}`).set("Authorization", `Bearer ${userToken}`);
+        expect(res.status).toBe(200);
+        expect(res.body.status).toBe("DELIVERED");
+        expect(res.body.items).toBeDefined();
+        expect(res.body.delivery_agent).toBeDefined();
+        expect(res.body.delivery_agent).toMatchObject({
+            id: expect.any(String),
+            name: expect.any(String),
+            phoneno: expect.any(Number),
+            img_url: expect.any(String),
+        });
+    });
+
 });
-

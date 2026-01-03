@@ -28,7 +28,7 @@ export const deliveryMiddleWare = (req: Request, res: Response, next: NextFuncti
         }
         req.usrId = decodedPayload.usrid;
         next();
-    } catch {
+    } catch (e) {
         res.status(401).json({ success: false, error: "Unauthorized" })
         return;
     }

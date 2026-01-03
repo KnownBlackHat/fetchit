@@ -4,6 +4,8 @@ import { Router } from "express";
 import { Category, Prisma } from "../../generated/prisma/client";
 import { vendorMiddleWare } from "../../middlewares/vendor";
 import { userMiddleWare } from "../../middlewares/user";
+import { errorHandler } from "@/utils/errorHandler";
+import { addInventoryHandler } from "@/controllers/shop";
 
 export const shopRouter = Router();
 
@@ -168,6 +170,7 @@ shopRouter.get("/inventory/:shopid", userMiddleWare, async (req, res) => {
             name: item.name,
             price: item.price,
             img_url: item.img_url,
+            retail_price: item.retail_price,
             rating: item.rating,
             rate_count: Number(item.rating_count),
             count: item.count
@@ -176,8 +179,7 @@ shopRouter.get("/inventory/:shopid", userMiddleWare, async (req, res) => {
         res.json({ items: inventoryMap });
         return;
 
-    } catch (e) {
-        console.log(e)
+    } catch {
         res.status(500).json({
             success: false,
             error: "Internal Server Error"
@@ -187,54 +189,7 @@ shopRouter.get("/inventory/:shopid", userMiddleWare, async (req, res) => {
 
 })
 
-shopRouter.post("/inventory", vendorMiddleWare, async (req, res) => {
-    const parsedData = AddInventorySchema.safeParse(req.body);
-    if (parsedData.success === false) {
-        res.status(400).json({
-            success: false,
-            error: "Invalid request data"
-        });
-        return;
-    }
-    try {
-        const inven = await client.inventory.create({
-            data: {
-                name: parsedData.data.name,
-                price: parsedData.data.price,
-                img_url: parsedData.data.img_url,
-                rating: parsedData.data.rating,
-                rating_count: parsedData.data.rating_count,
-                count: parsedData.data.count,
-                shop: {
-                    connect: {
-                        id: req.vendorId
-                    }
-                }
-            }
-        });
-        res.json({
-            success: true,
-            id: inven.id,
-        });
-        return;
-    } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-            if (e.code === "P2002") {
-                res.status(409).json({
-                    success: false,
-                    error: "Item with the same name already exists in the shop"
-                });
-                return;
-            } else {
-                res.status(500).json({
-                    success: false,
-                    error: "Internal Server Error"
-                });
-                return;
-            }
-        }
-    }
-})
+shopRouter.post("/inventory", vendorMiddleWare, errorHandler(addInventoryHandler))
 
 shopRouter.patch("/resturant/seat", vendorMiddleWare, async (req, res) => {
     const parsedData = UpdateSeatSchema.safeParse(req.body);

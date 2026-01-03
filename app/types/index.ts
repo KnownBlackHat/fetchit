@@ -58,14 +58,15 @@ export type vendorSignUpPayload = z.infer<typeof vendorSchema>;
 export type deliveryBoySignUpPayload = z.infer<typeof deliveryBoySchema>;
 export type SignUpPayload = z.infer<typeof SignUpSchema>;
 
-export const AddInventorySchema = z.object({
+export const AddInventorySchema = z.array(z.object({
     name: z.string(),
     price: z.number().positive(),
     img_url: z.url("Must be valid URL"),
+    retail_price: z.number().positive(),
+    count: z.number().int().nonnegative(),
     rating: z.number().min(0).max(5).optional(),
     rating_count: z.number().int().nonnegative().optional(),
-    count: z.number().int().nonnegative(),
-});
+}));
 
 export const UpdateSeatSchema = z.object({
     available_seat: z.number().int().nonnegative()
@@ -86,3 +87,9 @@ export const AddAddress = z.object({
     city: z.string(),
     postal_code: z.number()
 })
+
+export const PlaceOrder = z.array(z.object({
+    id: z.string(),
+    count: z.number()
+
+}))

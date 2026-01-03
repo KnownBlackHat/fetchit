@@ -61,3 +61,19 @@ export async function createUser() {
 
     return res.body.token;
 }
+
+export async function createDeliveryAgent() {
+    const username = "test_delivery" + Math.random();
+    const password = "1234";
+    const res = await request(app)
+        .post("/api/v1/signup")
+        .send({
+            username,
+            password,
+            phone_no: 9999999999,
+            img_url: "http://image.url/com",
+            role: "delivery_boy"
+        });
+
+    return res.body.token;
+}
