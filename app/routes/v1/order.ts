@@ -13,8 +13,9 @@ orderRouter.get("/history", userMiddleWare, errorHandler(getUserHistoryOrder));
 orderRouter.get("/vendor/active", vendorMiddleWare, errorHandler(getVendorActiveOrder));
 orderRouter.get("/vendor/history", vendorMiddleWare, errorHandler(getVendorHistoryOrder));
 
+orderRouter.post("/:shopid", userMiddleWare, errorHandler(placeOrder));
+
+// DELIVERY PART
 orderRouter.get("/complete/:orderid", deliveryMiddleWare, errorHandler(completeOrder));
 orderRouter.get("/status/:orderid", userMiddleWare, errorHandler(getOrderStatus));
 orderRouter.get("/delivery/status/:orderid", deliveryMiddleWare, errorHandler(getOrderStatus));
-
-orderRouter.post("/:shopid", userMiddleWare, errorHandler(placeOrder));

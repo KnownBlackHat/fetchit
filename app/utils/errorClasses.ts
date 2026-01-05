@@ -20,8 +20,8 @@ export class ParseError extends BaseError {
 }
 
 export class CustomError extends BaseError {
-    constructor(message = "Error") {
-        super(message, 400);
+    constructor(message = "Error", statusCode = 400) {
+        super(message, statusCode);
     }
 }
 

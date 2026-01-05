@@ -174,6 +174,42 @@ describe("Order Endpoint (POST /api/v1/order)", () => {
         // });
     });
 
+    test("should get intermidate order id on requesting delivery agent", async () => {
+        const res = await request(app).get(`/api/v1/order/delivery/get_delivery/${orderId}`).set("Authorization", `Bearer ${userToken}`);
+        expect(res.status).toBe(200);
+        expect(res.body.id).toBeDefined();
+    })
+
+    test("delivery agent should get list of order ids with address", async () => {
+        const res = await request(app).get('/api/v1/order/delivery/list_order').set("Authorization", `Bearer ${deliveryToken}`);
+        expect(res.status).toBe(200);
+        expect(res.body.orders).toBeDefined();
+        expect(res.body.orders[0]).toMatchObject({
+            orderId: expect.any(String),
+            address: expect.any(String)
+        });
+    });
+
+    test("delivery agent should accept orders", async () => {
+        const res = await request(app).get(`/api/v1/order/delivery/accept/${orderId}`).set("Authorization", `Bearer ${deliveryToken}`);
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+    });
+
+    test("should get order status to be confirmed", async () => {
+        const res = await request(app).get(`/api/v1/order/status/${orderId}`).set("Authorization", `Bearer ${userToken}`);
+        expect(res.status).toBe(200);
+        expect(res.body.status).toBe("CONFIRMED");
+        expect(res.body.items).toBeDefined();
+        expect(res.body.delivery_agent).toBeDefined();
+        expect(res.body.delivery_agent).toMatchObject({
+            id: expect.any(String),
+            name: expect.any(String),
+            phoneno: expect.any(Number),
+            img_url: expect.any(String),
+        });
+    });
+
 
     test("should complete order", async () => {
         const res = await request(app).get(`/api/v1/order/complete/${orderId}`).set("Authorization", `Bearer ${deliveryToken}`);

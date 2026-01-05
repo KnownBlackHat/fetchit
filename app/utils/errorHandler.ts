@@ -1,5 +1,5 @@
-import type { NextFunction, Request, Response } from "express";
-import { CustomError, DuplicateResourceError, InternalServerError, ParseError, UnauthorizedError } from "@/utils/errorClasses";
+import type { Request, Response } from "express";
+import { CustomError, DuplicateResourceError, ParseError, UnauthorizedError } from "@/utils/errorClasses";
 import { Prisma } from "@/generated/prisma/client";
 
 
