@@ -140,3 +140,9 @@ model OrderItems {
     inventoryId String
     inventory   Inventory @relation(fields: [inventoryId], references: [id])
 }
+
+model OrderIntermidates {
+    id          String @id @default(cuid())
+    orderId String @unique
+    address String
+    }

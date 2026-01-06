@@ -33,7 +33,7 @@ describe("Order Endpoint (POST /api/v1/order)", () => {
                 retail_price: 10.0,
             },
         ];
-        const addItemResp = await request(app)
+        await request(app)
             .post("/api/v1/shop/inventory")
             .set("Authorization", `Bearer ${vendorToken}`)
             .send(items);
@@ -175,13 +175,18 @@ describe("Order Endpoint (POST /api/v1/order)", () => {
     });
 
     test("should get intermidate order id on requesting delivery agent", async () => {
-        const res = await request(app).get(`/api/v1/order/delivery/get_delivery/${orderId}`).set("Authorization", `Bearer ${userToken}`);
+        const res = await request(app).get(`/api/v1/order/delivery/get_delivery/${orderId}`).set("Authorization", `Bearer ${deliveryToken}`);
         expect(res.status).toBe(200);
         expect(res.body.id).toBeDefined();
     })
 
+    test("should not get intermidate order id on requesting delivery agent with invalid orderId", async () => {
+        const res = await request(app).get('/api/v1/order/delivery/get_delivery/123').set("Authorization", `Bearer ${deliveryToken}`);
+        expect(res.status).toBe(404);
+    })
+
     test("delivery agent should get list of order ids with address", async () => {
-        const res = await request(app).get('/api/v1/order/delivery/list_order').set("Authorization", `Bearer ${deliveryToken}`);
+        const res = await request(app).get('/api/v1/order/delivery/list_orders').set("Authorization", `Bearer ${deliveryToken}`);
         expect(res.status).toBe(200);
         expect(res.body.orders).toBeDefined();
         expect(res.body.orders[0]).toMatchObject({
@@ -190,11 +195,17 @@ describe("Order Endpoint (POST /api/v1/order)", () => {
         });
     });
 
+    test("delivery agent can't get order status before accepting it", async () => {
+        const res = await request(app).get(`/api/v1/order/delivery/status/${orderId}`).set("Authorization", `Bearer ${deliveryToken}`);
+        expect(res.status).toBe(401);
+    })
+
     test("delivery agent should accept orders", async () => {
         const res = await request(app).get(`/api/v1/order/delivery/accept/${orderId}`).set("Authorization", `Bearer ${deliveryToken}`);
         expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);
     });
+
 
     test("should get order status to be confirmed", async () => {
         const res = await request(app).get(`/api/v1/order/status/${orderId}`).set("Authorization", `Bearer ${userToken}`);
@@ -206,9 +217,33 @@ describe("Order Endpoint (POST /api/v1/order)", () => {
             id: expect.any(String),
             name: expect.any(String),
             phoneno: expect.any(Number),
-            img_url: expect.any(String),
+            image_url: expect.any(String),
         });
     });
+
+    test("delivery agent should get order status after accepting it", async () => {
+        const res = await request(app).get(`/api/v1/order/delivery/status/${orderId}`).set("Authorization", `Bearer ${deliveryToken}`);
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({
+            delivery_address: expect.objectContaining({
+                line1: expect.any(String),
+                line2: expect.any(String),
+                landmark: expect.any(String),
+                city: expect.any(String),
+                postal_code: expect.any(Number),
+            }),
+            items: expect.arrayContaining([
+                expect.objectContaining(
+                    {
+                        id: expect.any(String),
+                        name: expect.any(String),
+                        price: expect.any(Number),
+                        count: expect.any(Number),
+                        image_url: expect.any(String),
+                    })
+            ])
+        });
+    })
 
 
     test("should complete order", async () => {
@@ -226,14 +261,15 @@ describe("Order Endpoint (POST /api/v1/order)", () => {
         expect(res.status).toBe(200);
         expect(Object.values(res.body).length).toBe(1);
         Object.values(res.body).forEach(item => {
-            // @ts-ignore
-            expect(item[0]).toMatchObject({
-                id: expect.any(String),
-                name: expect.any(String),
-                price: expect.any(Number),
-                image_url: expect.any(String),
-                count: expect.any(Number)
-            })
+            expect(item).toMatchObject(
+                expect.arrayContaining([
+                    {
+                        id: expect.any(String),
+                        name: expect.any(String),
+                        price: expect.any(Number),
+                        image_url: expect.any(String),
+                        count: expect.any(Number)
+                    }]))
         })
     });
 
@@ -253,7 +289,7 @@ describe("Order Endpoint (POST /api/v1/order)", () => {
         });
     });
 
-    test.skip("should get order status to be delivered", async () => {
+    test("should get order status to be delivered", async () => {
         const res = await request(app).get(`/api/v1/order/status/${orderId}`).set("Authorization", `Bearer ${userToken}`);
         expect(res.status).toBe(200);
         expect(res.body.status).toBe("DELIVERED");
@@ -263,7 +299,7 @@ describe("Order Endpoint (POST /api/v1/order)", () => {
             id: expect.any(String),
             name: expect.any(String),
             phoneno: expect.any(Number),
-            img_url: expect.any(String),
+            image_url: expect.any(String),
         });
     });
 

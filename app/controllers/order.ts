@@ -2,6 +2,7 @@ import { PlaceOrder } from "@/types";
 import type { Request, Response } from "express";
 import client from "@/lib/db"
 import { CustomError, ParseError, UnauthorizedError } from "@/utils/errorClasses";
+import { success } from "zod";
 
 export async function placeOrder(req: Request, res: Response) {
     const parsedData = PlaceOrder.safeParse(req.body);
@@ -394,8 +395,8 @@ export async function getOrderStatus(req: Request, res: Response) {
         delivery_agent: orders.delivery ? {
             id: orders.delivery.id,
             name: orders.delivery.username,
-            phoneno: orders.delivery.phone_no,
-            img_url: orders.delivery.img_url,
+            phoneno: Number(orders.delivery.phone_no),
+            image_url: orders.delivery.img_url,
         } : null
     });
 
@@ -403,4 +404,141 @@ export async function getOrderStatus(req: Request, res: Response) {
 
 
 
+export async function getOrderStatusDelivery(req: Request, res: Response) {
+    const orders = await client.orders.findUnique({
+        where: {
+            id: req.params.orderid
+        },
+        select: {
+            address: true,
+            delivery: true,
+            items: {
+                select: {
+                    quantity: true,
+                    inventory: {
+                        select: {
+                            id: true,
+                            name: true,
+                            price: true,
+                            img_url: true,
+                        }
+                    }
+                }
+            }
+        }
 
+    });
+    if (!orders) {
+        throw new CustomError("Order not found");
+    }
+
+    if (orders.delivery?.id !== req.usrId) {
+        throw new UnauthorizedError();
+    }
+
+    const formattedItems = orders.items.map(item => ({
+        id: item.inventory.id,
+        name: item.inventory.name,
+        price: item.inventory.price,
+        image_url: item.inventory.img_url,
+        count: item.quantity,
+    }));
+    res.json({
+        delivery_address: {
+            line1: orders.address.line1,
+            line2: orders.address.line2,
+            landmark: orders.address.landmark,
+            city: orders.address.city,
+            postal_code: orders.address.postal_code,
+        },
+        items: formattedItems,
+    });
+
+}
+
+
+export async function getDeliveryId(req: Request, res: Response) {
+    let intermediateOrderId;
+    await client.$transaction(async (tx) => {
+        const order = await tx.orders.findUnique({
+            where: {
+                id: req.params.orderid
+            }, select: {
+                address: true,
+                id: true
+            }
+        })
+
+        if (!order) {
+            throw new CustomError("Order id not found", 404);
+        }
+
+        intermediateOrderId = await tx.orderIntermidates.findUnique({
+            where: {
+                orderId: order.id
+            }
+        });
+
+        if (!intermediateOrderId) {
+            intermediateOrderId = await tx.orderIntermidates.create({
+                data: {
+                    orderId: order.id,
+                    address: order.address.line1
+                }
+            });
+        }
+
+    });
+
+    res.json({
+        id: intermediateOrderId
+    })
+}
+
+export async function getDeliveryList(req: Request, res: Response) {
+    const intermediates = await client.orderIntermidates.findMany();
+    const intermediateMap = intermediates.map(item => ({
+        orderId: item.orderId,
+        address: item.address
+    }));
+    res.json({ orders: intermediateMap })
+}
+
+export async function acceptDelivery(req: Request, res: Response) {
+    await client.$transaction(async (tx) => {
+        const order = await tx.orders.findUnique({
+            where: {
+                id: req.params.orderid
+            }, select: {
+                address: true,
+                id: true
+            }
+        })
+
+        if (!order) {
+            throw new CustomError("Order id not found", 404);
+        }
+
+        await tx.orderIntermidates.delete({
+            where: {
+                orderId: order.id
+            }
+        });
+
+        await tx.orders.update({
+            where: {
+                id: req.params.orderid
+            },
+            data: {
+                delivery: {
+                    connect: { id: req.usrId }
+                },
+                status: "CONFIRMED"
+            }
+        })
+    });
+
+    res.json({
+        success: true
+    });
+}
