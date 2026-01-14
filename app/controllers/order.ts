@@ -2,7 +2,6 @@ import { PlaceOrder } from "@/types";
 import type { Request, Response } from "express";
 import client from "@/lib/db"
 import { CustomError, ParseError, UnauthorizedError } from "@/utils/errorClasses";
-import { success } from "zod";
 
 export async function placeOrder(req: Request, res: Response) {
     const parsedData = PlaceOrder.safeParse(req.body);
@@ -36,7 +35,6 @@ export async function placeOrder(req: Request, res: Response) {
         totalPrice += (item.price * requestedItem!.count);
 
         orderItems.push({
-            id: item.id,
             quantity: requestedItem!.count,
             priceAtTime: item.price,
             inventory: {
@@ -75,7 +73,7 @@ export async function placeOrder(req: Request, res: Response) {
                 where: { id: item.id },
                 data: {
                     count: {
-                        decrement: orderItems.find(x => x.id === item.id)!.quantity
+                        decrement: orderItems.find(x => x.inventory.connect.id === item.id)!.quantity
                     }
                 }
             });

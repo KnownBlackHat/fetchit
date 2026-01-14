@@ -33,7 +33,22 @@ describe("Shop & Restaurant API Tests", () => {
 
         expect(res.status).toBe(200);
         expect(res.body.shops).toBeDefined();
-        expect(res.body.shops.length).toBe(4);
+        expect(res.body).toMatchObject({
+            shops: expect.arrayContaining([
+                {
+                    id: expect.any(String),
+                    username: expect.any(String),
+                    shop_name: expect.any(String),
+                    address: expect.any(String),
+                    rating: expect.any(Number),
+                    rating_count: expect.any(Number),
+                    phone_no: expect.any(Number),
+                    img_url: expect.any(String),
+                    active: expect.any(Boolean),
+                    category: expect.any(String),
+                }
+            ])
+        })
     });
 
     test("vendor can add items in shop", async () => {

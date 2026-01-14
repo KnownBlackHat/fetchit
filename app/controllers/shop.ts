@@ -34,7 +34,8 @@ export async function getShopsList(req: Request, res: Response) {
     const resMap = shops.map((shop) => ({
         id: shop.id,
         username: shop.username,
-        shop_name: shop.address,
+        shop_name: shop.shop_name,
+        address: shop.address,
         rating: shop.rating,
         rating_count: Number(shop.rating_count),
         phone_no: Number(shop.phone_no),
