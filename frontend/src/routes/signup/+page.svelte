@@ -82,6 +82,7 @@
 
 </script>
 
+<div class="flex items-center justify-center w-full">
 <div class="w-[80%] md:w-1/3 bg-[#FFFFFF] p-4 rounded-4xl relative pt-20 pb-6">
 
      <div class="flex w-full font-extrabold uppercase tracking-wider text-md">
@@ -139,4 +140,4 @@
       <div class="mt-4 text-sm font-bold text-center">Have an account? <a class="text-[#8C6D03] font-bold" href="/login">Login</a></div>
  </div>
 
-
+</div>

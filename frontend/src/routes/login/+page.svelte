@@ -61,6 +61,7 @@
 
 </script>
 
+<div class="flex items-center justify-center w-full">
 <div class="w-[80%] md:w-1/3 bg-[#FFFFFF] p-4 rounded-4xl relative pt-20 pb-6">
 
      <div class="flex w-full font-extrabold uppercase tracking-wider text-md">
@@ -109,5 +110,6 @@
       <div class="mt-4 text-sm font-bold text-right">Forgot Password? </div>
       <div class="text-center mt-4"><Button onclick={login}  variant="brown">Login</Button> </div>
       <div class="mt-4 text-sm font-bold text-center">Don't have an account? <a class="text-[#8C6D03] font-bold" href="/signup">Signup</a></div>
+ </div>
  </div>
 
