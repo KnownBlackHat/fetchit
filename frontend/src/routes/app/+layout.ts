@@ -12,6 +12,7 @@ export async function load() {
         Authorization: "Bearer " + localStorage.getItem("token") || "",
       },
     });
+
     const address = await res.json();
     return address;
   }
