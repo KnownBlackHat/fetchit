@@ -13,7 +13,7 @@ import { Salad, Van, ShoppingBasket, House, Settings} from 'lucide-svelte';
     <img class="size-12 rounded-full" alt="avatar" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaZnF8ElwCzCgHGTNVnaElToLnw3zE4AgEVQ&s" />
 </header>
 
-<main class="overflow-x-hidden overflow-y-scroll min-h-screen">
+<main class="overflow-x-hidden overflow-y-scroll min-h-screen flex flex-col">
     {@render children()}
 </main>
 
