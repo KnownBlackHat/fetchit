@@ -3,7 +3,7 @@ const { data, children } = $props();
 import { Salad, Van, ShoppingBasket, House, Settings} from 'lucide-svelte';
 </script>
 
-<div class="w-full relative">
+<div class="w-full ">
 <header class="flex justify-around items-center">
     <img src="./logo.png" alt="logo"/> 
     <div class="text-xs font-bold">
@@ -17,7 +17,7 @@ import { Salad, Van, ShoppingBasket, House, Settings} from 'lucide-svelte';
     {@render children()}
 </main>
 
-<footer class="bg-white fixed bottom-0 w-full py-2 text-xs flex justify-evenly items-center">
+<footer class="bg-white fixed bottom-0 right-0 left-0 max-w-svh mx-auto w-full py-2 text-xs flex justify-evenly items-center">
     <div>
         <Salad/>
         Food
