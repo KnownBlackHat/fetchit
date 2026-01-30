@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
-const { data, children } = $props();
-import { Salad, Van, ShoppingBasket, Settings} from 'lucide-svelte';
+    import BottomNav from '@/components/custom/bottomNav.svelte';
+    const { data, children } = $props();
+
 </script>
 
 <div class="w-full ">
@@ -17,24 +17,5 @@ import { Salad, Van, ShoppingBasket, Settings} from 'lucide-svelte';
 <main class="overflow-x-hidden overflow-y-scroll min-h-screen flex flex-col relative">
     {@render children()}
 </main>
-
-<footer class="bg-white fixed bottom-0 right-0 left-0 max-w-svh space-x-10 mx-auto w-full py-2 text-xs flex justify-evenly items-center">
-    <button class="flex flex-col items-center justify-center" onclick={() => goto('/app')}>
-        <Salad/>
-        Food
-    </button>
-    <button class="flex flex-col items-center justify-center" onclick={() => goto('/orders')}>
-        <Van/>
-        Orders
-    </button>
-    <button class="flex flex-col items-center justify-center" onclick={() => goto('/cart')}>
-        <ShoppingBasket/>
-        Cart
-    </button>
-    <button class="flex flex-col items-center justify-center" onclick={() => goto('/setting')}>
-        <Settings/>
-        Setting
-    </button>
-</footer>
-
+    <BottomNav/>
 </div>
