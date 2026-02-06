@@ -3,6 +3,7 @@
     import ShopCard from "$lib/components/custom/shopCard.svelte";
     import * as InputGroup from "$lib/components/ui/input-group/index.js";
     import SearchIcon from "@lucide/svelte/icons/search";
+    import { getRestaurant } from "../../controller/shop";
 
     const mock_restaurant_data = [{
             title: "Monet Lounge and Bar",
@@ -94,7 +95,6 @@
             available_seat: 25,
             img_url: "https://images.unsplash.com/photo-1553621042-f6e147245754?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c3VzaGklMjByZXN0YXVyYW50fGVufDB8fDB8fDA%3D"
         },
-
         ]
 
 </script>
@@ -123,7 +123,6 @@
     <InputGroup.Addon>
       <SearchIcon />
     </InputGroup.Addon>
-    <InputGroup.Addon align="inline-end">12 results</InputGroup.Addon>
   </InputGroup.Root>
 
 </div>
@@ -133,15 +132,30 @@
 </div>
 
 <div class="mx-4 mt-6 space-y-4 md:mx-auto">
-    {#each mock_restaurant_data as rest}
-        <ShopCard 
-            title={rest.title}
-            rating={rest.rating}
-            rating_count={rest.rating_count}
-            address={rest.address}
-            total_seat={rest.total_seat}
-            available_seat={rest.available_seat}
-            img_url={rest.img_url}
-        />
-    {/each}
+    {#await getRestaurant()}
+        {#each Array(3) as _}
+            <ShopCard 
+                title={''}
+                rating={0}
+                rating_count={0}
+                address={''}
+                total_seat={0}
+                available_seat={0}
+                img_url={''}
+            />
+            {/each}
+    {:then value}
+        {#each value ?? mock_restaurant_data as rest}
+            <ShopCard 
+                title={rest.title}
+                rating={rest.rating}
+                rating_count={rest.rating_count}
+                address={rest.address}
+                total_seat={rest.total_seat}
+                available_seat={rest.available_seat}
+                img_url={rest.img_url}
+            />
+            
+        {/each}
+    {/await}
 </div>
