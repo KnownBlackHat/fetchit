@@ -17,6 +17,7 @@ type Restaurant = {
   img_url: string;
 };
 
+// TODO: Limit the response in order to avoid mem leak
 export async function getRestaurant() {
   let req = await fetch(SHOP_ENDPOINT, {
     headers: {
